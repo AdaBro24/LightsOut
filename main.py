@@ -48,5 +48,10 @@ if __name__ == '__main__':
                 board = board.toggle(x, y)
                 board.display()
 
+        case _:
+            print("wrong input")
+
+
+
 
 
