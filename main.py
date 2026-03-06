@@ -43,7 +43,7 @@ if __name__ == '__main__':
                 print("Moves:", solution)
 
             board = start_board
-            for i, (x, y) in enumerate(solution, 1):
+            for i, (x, y) in enumerate(solution, start=1):
                 print(f"Move: {i}: toggle: ({x},{y}))")
                 board = board.toggle(x, y)
                 board.display()
