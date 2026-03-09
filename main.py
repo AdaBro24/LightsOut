@@ -3,7 +3,6 @@ from bfs import bfs
 from dfs import dfs
 
 try:
-    # optional GUI module
     from gui import main as gui_main, TK_AVAILABLE
 except Exception:
     gui_main = None
@@ -60,10 +59,9 @@ if __name__ == '__main__':
 
     start_board = Board(start_grid)
 
-    # choose GUI or CLI when possible
     if TK_AVAILABLE:
-        choice = input("Choose interface: 'gui' or 'cli' (default gui): ").strip().lower()
-        if choice == 'cli':
+        choice = input("Choose interface: \n[0] GUI \n[1] CLI \n(default gui): ").strip().lower()
+        if choice == '1':
             run_textual(start_board)
         else:
             try:
