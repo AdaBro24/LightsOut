@@ -60,17 +60,17 @@ if __name__ == '__main__':
 
     start_board = Board(start_grid)
 
-    # Let user choose GUI or CLI when possible
+    # choose GUI or CLI when possible
     if TK_AVAILABLE:
-        choice = input("Choose interface: 'gui' or 'cli' (default cli): ").strip().lower()
-        if choice == 'gui':
+        choice = input("Choose interface: 'gui' or 'cli' (default gui): ").strip().lower()
+        if choice == 'cli':
+            run_textual(start_board)
+        else:
             try:
                 gui_main(start_board)
             except Exception as e:
                 print('Failed to launch GUI, falling back to CLI:', e)
                 run_textual(start_board)
-        else:
-            run_textual(start_board)
     else:
         run_textual(start_board)
 
