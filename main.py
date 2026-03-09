@@ -1,18 +1,16 @@
-from board import *
+from board import Board
 from bfs import bfs
 from dfs import dfs
 
+try:
+    # optional GUI module
+    from gui import main as gui_main, TK_AVAILABLE
+except Exception:
+    gui_main = None
+    TK_AVAILABLE = False
 
 
-if __name__ == '__main__':
-
-    start_grid = [
-        [0, 0, 1,],
-        [1, 0, 0,],
-        [0, 0, 0]
-    ]
-
-    start_board = Board(start_grid)
+def run_textual(start_board: Board):
     print("start_board: ")
     start_board.display()
 
@@ -50,6 +48,31 @@ if __name__ == '__main__':
 
         case _:
             print("wrong input")
+
+
+if __name__ == '__main__':
+
+    start_grid = [
+        [0, 0, 1,],
+        [1, 0, 0,],
+        [0, 0, 0]
+    ]
+
+    start_board = Board(start_grid)
+
+    # Let user choose GUI or CLI when possible
+    if TK_AVAILABLE:
+        choice = input("Choose interface: 'gui' or 'cli' (default cli): ").strip().lower()
+        if choice == 'gui':
+            try:
+                gui_main(start_board)
+            except Exception as e:
+                print('Failed to launch GUI, falling back to CLI:', e)
+                run_textual(start_board)
+        else:
+            run_textual(start_board)
+    else:
+        run_textual(start_board)
 
 
 
