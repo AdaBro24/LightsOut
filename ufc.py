@@ -2,15 +2,16 @@ from heapq import heappush, heappop
 
 def ufc(start_board):
 
-    pq = []  # priority queue, in this algorithm every move has the same cost - it works like bfs
+    pq = []
     visited = set()
+    counter = 0
 
-    heappush(pq, (0, start_board, []))
+    heappush(pq, (0, counter, start_board, []))
 
     visited.add(tuple(tuple(row) for row in start_board.grid))
 
     while pq:
-        cost, board, path = heappop(pq)
+        cost, _, board, path = heappop(pq)
 
         if board.is_goal():
             return path
@@ -24,7 +25,9 @@ def ufc(start_board):
                 if state not in visited:
                     visited.add(state)
 
+                    counter += 1
                     new_cost = cost + 1
-                    heappush(pq, (new_cost, new_board, path + [(x, y)]))
+
+                    heappush(pq, (new_cost, counter, new_board, path + [(x, y)]))
 
     return None
