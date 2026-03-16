@@ -128,7 +128,7 @@ if TK_AVAILABLE:
 else:
     def main(start_board: Board = None):
         print('Tkinter is not available. Falling back to CLI for project_adam.')
-        # if tkinter is missing, run the textual main from adam
+        # if tkinter is missing, run cli
         try:
             import main as textual_main
             if hasattr(textual_main, 'main'):
