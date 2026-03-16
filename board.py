@@ -1,5 +1,5 @@
 class Board:
-    board_size = 3
+    board_size = 4
 
     def __init__(self, grid):
         self.grid = grid
