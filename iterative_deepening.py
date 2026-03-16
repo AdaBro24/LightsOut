@@ -3,7 +3,7 @@ from board import Board
 def depth_limited_search(board, limit, path, visited):
 
     if board.is_goal():
-        return True
+        return path
 
     if limit == 0:
         return None
@@ -29,7 +29,7 @@ def depth_limited_search(board, limit, path, visited):
 
 def iterative_deepening(start_board, max_depth = 10):
     for depth in range(max_depth + 1):
-        
+
         visited = set()
         visited.add(tuple(tuple(row) for row in start_board.grid))
 

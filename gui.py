@@ -13,6 +13,8 @@ import random
 from board import Board
 from bfs import bfs
 from dfs import dfs
+from iterative_deepening import iterative_deepening
+from ufc import ufc
 
 
 if TK_AVAILABLE:
@@ -80,23 +82,57 @@ if TK_AVAILABLE:
             self.refresh()
 
         def on_solve(self):
-            algo = simpledialog.askstring('Solver', "Choose solver: 'bfs' or 'dfs'", initialvalue='bfs')
+            algo = simpledialog.askstring(
+                'Solver',
+                "Choose solver: 'bfs', 'dfs', 'iddfs' or 'ufc'",
+                initialvalue='bfs'
+            )
+
             if not algo:
                 return
+
             algo = algo.strip().lower()
+
             if algo == 'bfs':
                 solution = bfs(self.board)
+
             elif algo == 'dfs':
                 solution = dfs(self.board)
+
+            elif algo == 'iddfs':
+
+                max_depth = simpledialog.askinteger(
+                    'Depth',
+                    'Maximum search depth:',
+                    initialvalue=10,
+                    minvalue=1,
+                    maxvalue=50
+                )
+
+                if max_depth is None:
+                    return
+
+                solution = iterative_deepening(self.board, max_depth)
+
+            elif algo == 'ufc':
+                solution = ufc(self.board)
+
             else:
-                messagebox.showerror('Solver', 'Unknown solver: use bfs or dfs')
+                messagebox.showerror(
+                    'Solver',
+                    "Unknown solver: use bfs, dfs, iddfs or ufc"
+                )
                 return
 
             if solution is None:
                 messagebox.showinfo('Solve', 'There is no solution')
                 return
 
-            apply_now = messagebox.askyesno('Apply solution', f'Solution found with {len(solution)} moves. Apply with animation?')
+            apply_now = messagebox.askyesno(
+                'Apply solution',
+                f'Solution found with {len(solution)} moves. Apply with animation?'
+            )
+
             if apply_now:
                 self.animate_solution(solution)
             else:
