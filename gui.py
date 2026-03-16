@@ -44,7 +44,7 @@ if TK_AVAILABLE:
             tk.Button(ctrl, text='Randomize', command=self.on_random).grid(row=0, column=0, padx=4)
             tk.Button(ctrl, text='Solve', command=self.on_solve).grid(row=0, column=1, padx=4)
             tk.Button(ctrl, text='Reset', command=self.on_reset).grid(row=0, column=2, padx=4)
-            tk.Button(ctrl, text='Quit', command=master.quit).grid(row=0, column=3, padx=4)
+            tk.Button(ctrl, text='Quit', command=master.destroy).grid(row=0, column=3, padx=4)
 
             self.status = tk.Label(master, text='')
             self.status.pack(pady=(4,0))
