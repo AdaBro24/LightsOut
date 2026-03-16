@@ -13,6 +13,7 @@ import random
 from board import Board
 from bfs import bfs
 from dfs import dfs
+from astar import astar, weighted_astar
 
 
 if TK_AVAILABLE:
@@ -80,7 +81,8 @@ if TK_AVAILABLE:
             self.refresh()
 
         def on_solve(self):
-            algo = simpledialog.askstring('Solver', "Choose solver: 'bfs' or 'dfs'", initialvalue='bfs')
+            prompt = "Choose solver: 'bfs', 'dfs', 'astar', or 'wastar' (weighted A*)."
+            algo = simpledialog.askstring('Solver', prompt, initialvalue='bfs')
             if not algo:
                 return
             algo = algo.strip().lower()
@@ -88,8 +90,15 @@ if TK_AVAILABLE:
                 solution = bfs(self.board)
             elif algo == 'dfs':
                 solution = dfs(self.board)
+            elif algo == 'astar':
+                solution = astar(self.board)
+            elif algo in ('wastar', 'weighted', 'weighted_astar', 'weightedastar'):
+                weight = simpledialog.askfloat('Weighted A*', 'Weight:', initialvalue=1.5, minvalue=1.0)
+                if weight is None:
+                    return
+                solution = weighted_astar(self.board, weight)
             else:
-                messagebox.showerror('Solver', 'Unknown solver: use bfs or dfs')
+                messagebox.showerror('Solver', "Unknown solver: use 'bfs', 'dfs', 'astar' or 'wastar'")
                 return
 
             if solution is None:
