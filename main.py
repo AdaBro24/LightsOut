@@ -52,9 +52,10 @@ def run_textual(start_board: Board):
 if __name__ == '__main__':
 
     start_grid = [
-        [0, 0, 1,],
-        [1, 0, 0,],
-        [0, 0, 0]
+        [0, 1, 0, 1],
+        [0, 0, 0, 1],
+        [0, 0, 1, 1],
+        [0, 0, 1, 0],
     ]
 
     start_board = Board(start_grid)
