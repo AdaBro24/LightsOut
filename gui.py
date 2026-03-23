@@ -27,6 +27,8 @@ if TK_AVAILABLE:
             self.board_size = Board.board_size
             self.start_board = start_board or Board([[0]*self.board_size for _ in range(self.board_size)])
             self.board = self.start_board
+            self.hint_move = None
+            self.hints_used = 0
             self.points = 0
             self.remaining_seconds = self.ROUND_SECONDS
             self.timer_job = None
@@ -48,8 +50,9 @@ if TK_AVAILABLE:
             ctrl.pack(pady=6)
 
             tk.Button(ctrl, text='Solve', command=self.on_solve).grid(row=0, column=0, padx=4)
-            tk.Button(ctrl, text='Reset Board', command=self.on_reset).grid(row=0, column=1, padx=4)
-            tk.Button(ctrl, text='Quit', command=master.destroy).grid(row=0, column=2, padx=4)
+            tk.Button(ctrl, text='Hint', command=self.on_hint).grid(row=0, column=1, padx=4)
+            tk.Button(ctrl, text='Reset Board', command=self.on_reset).grid(row=0, column=2, padx=4)
+            tk.Button(ctrl, text='Quit', command=master.destroy).grid(row=0, column=3, padx=4)
 
             self.status = tk.Label(master, text='')
             self.status.pack(pady=(4,0))
@@ -74,6 +77,7 @@ if TK_AVAILABLE:
 
         def start_new_round(self, randomize: bool = True, restart_timer: bool = True):
             self.solver_used_in_round = False
+            self.hint_move = None
             if randomize:
                 self.board = self.generate_random_board()
             else:
@@ -110,11 +114,15 @@ if TK_AVAILABLE:
                     val = self.board.grid[r][c]
                     b = self.buttons[r][c]
                     b.config(bg=self.color_for(val), activebackground=self.color_for(val))
+                    if self.hint_move == (r, c):
+                        b.config(relief='solid', bd=4)
+                    else:
+                        b.config(relief='raised', bd=1)
             solved = self.board.is_goal()
             if solved:
-                self.status.config(text=f'Solved | Points: {self.points}')
+                self.status.config(text=f'Solved | Points: {self.points} | Hints used: {self.hints_used}')
             else:
-                self.status.config(text=f'Not solved | Points: {self.points}')
+                self.status.config(text=f'Not solved | Points: {self.points} | Hints used: {self.hints_used}')
 
         def finish_round_if_solved(self):
             if not self.board.is_goal():
@@ -130,6 +138,7 @@ if TK_AVAILABLE:
         def on_press(self, r: int, c: int):
             if self.remaining_seconds <= 0:
                 return
+            self.hint_move = None
             self.board = self.board.toggle(r, c)
             self.refresh()
             self.finish_round_if_solved()
@@ -138,6 +147,27 @@ if TK_AVAILABLE:
             #new random board, points are preserved.
             self.start_new_round(randomize=True, restart_timer=False)
             self.refresh()
+
+        def on_hint(self):
+            if self.board.is_goal():
+                messagebox.showinfo('Hint', 'Board is already solved.')
+                return
+
+            # A* first option. BFS if doesnt work
+            solution = astar(self.board)
+            if solution is None:
+                solution = bfs(self.board)
+
+            if not solution:
+                self.hint_move = None
+                messagebox.showinfo('Hint', 'No hint available for this state.')
+                self.refresh()
+                return
+
+            self.hints_used += 1
+            self.hint_move = solution[0]
+            self.refresh()
+            r, c = self.hint_move
 
         def on_solve(self):
             prompt = "Choose solver: 'bfs', 'dfs', 'iddfs' or 'ufc', 'astar', or 'wastar' (weighted A*)."
@@ -148,6 +178,7 @@ if TK_AVAILABLE:
 
             algo = algo.strip().lower()
             self.solver_used_in_round = True
+            self.hint_move = None
 
             if algo == 'bfs':
                 solution = bfs(self.board)
