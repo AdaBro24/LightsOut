@@ -50,13 +50,15 @@ if TK_AVAILABLE:
             tk.Button(ctrl, text='Solve', command=self.on_solve).grid(row=0, column=0, padx=4)
             tk.Button(ctrl, text='Reset Board', command=self.on_reset).grid(row=0, column=1, padx=4)
             tk.Button(ctrl, text='Quit', command=master.destroy).grid(row=0, column=2, padx=4)
+            tk.Button(ctrl, text='Difficulty', command=self.choose_difficulty).grid(row=0, column=3, padx=4)
 
             self.status = tk.Label(master, text='')
             self.status.pack(pady=(4,0))
             self.timer_label = tk.Label(master, text='')
             self.timer_label.pack(pady=(2, 0))
 
-            self.start_new_round(randomize=True, restart_timer=True)
+            #self.start_new_round(randomize=True, restart_timer=True)
+            self.choose_difficulty()
             self.refresh()
 
         def format_time(self, total_seconds: int) -> str:
@@ -84,6 +86,55 @@ if TK_AVAILABLE:
                 self.master.after_cancel(self.timer_job)
                 self.timer_job = None
             self.tick_timer()
+
+        def choose_difficulty(self):
+            choice = simpledialog.askstring(
+                'Difficulty',
+                "Choose difficulty: 'easy', 'medium', 'hard'",
+                initialvalue="medium"
+            )
+
+            if not choice:
+                return
+
+            choice = choice.strip().lower()
+
+            if choice == 'easy':
+                size = 3
+            elif choice == 'medium':
+                size = 4
+            elif choice == 'hard':
+                size = 5
+            else:
+                messagebox.showerror('Error', 'Invalid Difficulty')
+                return
+
+            Board.board_size = size
+            self.board_size = size
+
+            self.rebuild_board()
+
+        def rebuild_board(self):
+            for row in self.buttons:
+                for btn in row:
+                    btn.destroy()
+
+            self.buttons = [[None for _ in range(self.board_size)] for _ in range(self.board_size)]
+
+            for r in range(self.board_size):
+                for c in range(self.board_size):
+                    b = tk.Button(
+                        self.frame,
+                        width=4,
+                        height=2,
+                        command=lambda r=r, c=c: self.on_press(r, c)
+                    )
+                    b.grid(row=r, column=c, padx=2, pady=2)
+                    self.buttons[r][c] = b
+
+            self.start_new_round(randomize=True, restart_timer=True)
+            self.refresh()
+
 
         def tick_timer(self):
             if self.board.is_goal():
