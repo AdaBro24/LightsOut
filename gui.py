@@ -1,6 +1,6 @@
 try:
     import tkinter as tk
-    from tkinter import messagebox, simpledialog
+    from tkinter import messagebox, simpledialog, filedialog
     TK_AVAILABLE = True
 except Exception:
     tk = None
@@ -17,7 +17,7 @@ from astar import astar, weighted_astar
 from iterative_deepening import iterative_deepening
 from ufc import ufc
 from perf import run_with_stats
-from perf import run_with_stats
+from io_utils import load_board_from_file, save_results_to_file, save_bulk_results
 
 
 if TK_AVAILABLE:
@@ -35,6 +35,8 @@ if TK_AVAILABLE:
             self.remaining_seconds = self.ROUND_SECONDS
             self.timer_job = None
             self.solver_used_in_round = False
+            self.last_results = None
+            self.input_file = None
 
             master.title('Lights Out (project_adam)')
 
@@ -56,6 +58,7 @@ if TK_AVAILABLE:
             tk.Button(ctrl, text='Quit', command=master.destroy).grid(row=0, column=2, padx=4)
             tk.Button(ctrl, text='Difficulty', command=self.choose_difficulty).grid(row=0, column=3, padx=4)
             tk.Button(ctrl, text='Hint', command=self.on_hint).grid(row=0, column=4, padx=4)
+            tk.Button(ctrl, text='Load', command=self.on_load_file).grid(row=0, column=5, padx=4)
 
 
             self.status = tk.Label(master, text='')
@@ -202,6 +205,67 @@ if TK_AVAILABLE:
             self.start_new_round(randomize=True, restart_timer=False)
             self.refresh()
 
+        def on_load_file(self):
+            try:
+                path = filedialog.askopenfilename(filetypes=[('Text files','*.txt'), ('All','*.*')])
+            except Exception:
+                # fallback to simple input if filedialog not available
+                path = input('Path to puzzle file: ').strip()
+
+            if not path:
+                return
+
+            try:
+                board = load_board_from_file(path)
+            except Exception as e:
+                messagebox.showerror('Load', f'Failed to load board: {e}')
+                return
+
+            # apply loaded board: recreate buttons for new size and set board
+            self.input_file = path
+            self.start_board = board
+            self.board = board
+            self.board_size = Board.board_size
+
+            # destroy existing buttons
+            for row in self.buttons:
+                for btn in row:
+                    try:
+                        btn.destroy()
+                    except Exception:
+                        pass
+
+            self.buttons = [[None for _ in range(self.board_size)] for _ in range(self.board_size)]
+            for r in range(self.board_size):
+                for c in range(self.board_size):
+                    b = tk.Button(
+                        self.frame,
+                        width=4,
+                        height=2,
+                        command=lambda r=r, c=c: self.on_press(r, c)
+                    )
+                    b.grid(row=r, column=c, padx=2, pady=2)
+                    self.buttons[r][c] = b
+
+            self.refresh()
+
+            # immediately run all solvers and write combined results file
+            try:
+                solvers = {
+                    'bfs': bfs,
+                    'dfs': dfs,
+                    'astar': astar,
+                    'weighted_astar_w1.5': (lambda b: weighted_astar(b, 1.5)),
+                    'iddfs_d10': (lambda b: iterative_deepening(b, 10)),
+                    'ufc': ufc,
+                }
+                out_path = save_bulk_results(path, solvers)
+                messagebox.showinfo('Load', f'Loaded board and saved bulk results to:\n{out_path}')
+            except Exception as e:
+                messagebox.showerror('Bulk run', f'Failed to run solvers and save results: {e}')
+
+        
+
         def on_hint(self):
             if self.board.is_goal():
                 messagebox.showinfo('Hint', 'Board is already solved.')
@@ -223,6 +287,17 @@ if TK_AVAILABLE:
             self.hint_move = solution[0]
             self.refresh()
             r, c = self.hint_move
+
+            # store last hint stats so user can save them if desired
+            self.last_results = {
+                'input_file': getattr(self, 'input_file', None),
+                'solver': 'hint',
+                'solution': solution,
+                'elapsed': elapsed,
+                'peak': peak,
+                'final_board': None,
+                'notes': 'Hint generated (first move)'
+            }
 
         def on_solve(self):
             prompt = "Choose solver: 'bfs', 'dfs', 'iddfs' or 'ufc', 'astar', or 'wastar' (weighted A*)."
@@ -280,7 +355,35 @@ if TK_AVAILABLE:
                 self.animate_solution(solution)
             else:
                 messagebox.showinfo('Solution', f'Moves: {solution}')
+            # compute final board after applying solution (without mutating current board)
+            final_board = self.board
+            if solution:
+                # apply moves to a copy
+                b = final_board
+                for (x, y) in solution:
+                    b = b.toggle(x, y)
+                final_board = b
 
+            # store last solve stats for save
+            self.last_results = {
+                'input_file': getattr(self, 'input_file', None),
+                'solver': algo,
+                'solution': solution,
+                'elapsed': elapsed,
+                'peak': peak,
+                'final_board': final_board,
+            }
+
+            # offer to save automatically
+            try:
+                if messagebox.askyesno('Save', 'Save results to file?'):
+                    path = filedialog.asksaveasfilename(defaultextension='.txt', filetypes=[('Text files','*.txt'), ('All','*.*')])
+                    if path:
+                        save_results_to_file(path, self.last_results)
+                        messagebox.showinfo('Saved', f'Results saved to {path}')
+            except Exception:
+                # ignore file dialog issues
+                pass
         def animate_solution(self, solution, delay=400):
             # animate applying each toggle in sequence using after
             if not solution:
