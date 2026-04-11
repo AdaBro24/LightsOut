@@ -16,6 +16,8 @@ from dfs import dfs
 from astar import astar, weighted_astar
 from iterative_deepening import iterative_deepening
 from ufc import ufc
+from perf import run_with_stats
+from perf import run_with_stats
 
 
 if TK_AVAILABLE:
@@ -205,10 +207,11 @@ if TK_AVAILABLE:
                 messagebox.showinfo('Hint', 'Board is already solved.')
                 return
 
-            # A* first option. BFS if doesnt work
-            solution = astar(self.board)
+            solution, elapsed, peak = run_with_stats(astar, self.board)
             if solution is None:
-                solution = bfs(self.board)
+                solution, elapsed2, peak2 = run_with_stats(bfs, self.board)
+                elapsed = elapsed2
+                peak = peak2
 
             if not solution:
                 self.hint_move = None
@@ -233,17 +236,17 @@ if TK_AVAILABLE:
             self.hint_move = None
 
             if algo == 'bfs':
-                solution = bfs(self.board)
+                solution, elapsed, peak = run_with_stats(bfs, self.board)
 
             elif algo == 'dfs':
-                solution = dfs(self.board)
+                solution, elapsed, peak = run_with_stats(dfs, self.board)
             elif algo == 'astar':
-                solution = astar(self.board)
+                solution, elapsed, peak = run_with_stats(astar, self.board)
             elif algo in ('wastar', 'weighted', 'weighted_astar', 'weightedastar'):
                 weight = simpledialog.askfloat('Weighted A*', 'Weight:', initialvalue=1.5, minvalue=1.0)
                 if weight is None:
                     return
-                solution = weighted_astar(self.board, weight)
+                solution, elapsed, peak = run_with_stats(weighted_astar, self.board, weight)
             elif algo == 'iddfs':
 
                 max_depth = simpledialog.askinteger(
@@ -257,10 +260,10 @@ if TK_AVAILABLE:
                 if max_depth is None:
                     return
 
-                solution = iterative_deepening(self.board, max_depth)
+                solution, elapsed, peak = run_with_stats(iterative_deepening, self.board, max_depth)
 
             elif algo == 'ufc':
-                solution = ufc(self.board)
+                solution, elapsed, peak = run_with_stats(ufc, self.board)
             else:
                 messagebox.showerror('Solver', "Unknown solver: use 'bfs', 'dfs', 'iddfs', 'ufc', 'astar' or 'wastar'")
                 return
@@ -270,7 +273,7 @@ if TK_AVAILABLE:
 
             apply_now = messagebox.askyesno(
                 'Apply solution',
-                f'Solution found with {len(solution)} moves. Apply with animation?'
+                f'Solution found with {len(solution)} moves. \nTime: {elapsed:.6f} s\nPeak memory: {peak/1024:.2f} KiB. Apply with animation?'
             )
 
             if apply_now:

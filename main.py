@@ -1,6 +1,7 @@
 from board import Board
 from bfs import bfs
 from dfs import dfs
+from perf import run_with_stats
 
 try:
     from gui import main as gui_main, TK_AVAILABLE
@@ -16,7 +17,7 @@ def run_textual(start_board: Board):
     algorithm = input("Choose an algorithm: 'bfs' or 'dfs':")
     match algorithm:
         case "bfs":
-            solution = bfs(start_board)
+            solution, elapsed, peak = run_with_stats(bfs, start_board)
 
             if solution is None:
                 print("There is no solution")
@@ -24,14 +25,17 @@ def run_textual(start_board: Board):
                 print(f"Solution found in {len(solution)} moves")
                 print("Moves:", solution)
 
+            print(f"Time: {elapsed:.6f} s | Peak memory: {peak/1024:.2f} KiB")
+
             board = start_board
-            for i, (x, y) in enumerate(solution, 1):
-                print(f"Move: {i}: toggle: ({x},{y}))")
-                board = board.toggle(x, y)
-                board.display()
+            if solution:
+                for i, (x, y) in enumerate(solution, 1):
+                    print(f"Move: {i}: toggle: ({x},{y}))")
+                    board = board.toggle(x, y)
+                    board.display()
 
         case "dfs":
-            solution = dfs(start_board)
+            solution, elapsed, peak = run_with_stats(dfs, start_board)
 
             if solution is None:
                 print("There is no solution")
@@ -39,11 +43,14 @@ def run_textual(start_board: Board):
                 print(f"Solution found in {len(solution)} moves")
                 print("Moves:", solution)
 
+            print(f"Time: {elapsed:.6f} s | Peak emory: {peak/1024:.2f} KiB")
+
             board = start_board
-            for i, (x, y) in enumerate(solution, start=1):
-                print(f"Move: {i}: toggle: ({x},{y}))")
-                board = board.toggle(x, y)
-                board.display()
+            if solution:
+                for i, (x, y) in enumerate(solution, start=1):
+                    print(f"Move: {i}: toggle: ({x},{y}))")
+                    board = board.toggle(x, y)
+                    board.display()
 
         case _:
             print("wrong input")
