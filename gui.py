@@ -16,6 +16,7 @@ from dfs import dfs
 from astar import astar, weighted_astar
 from iterative_deepening import iterative_deepening
 from ufc import ufc
+from perf import run_with_stats
 
 
 if TK_AVAILABLE:
@@ -92,17 +93,17 @@ if TK_AVAILABLE:
             algo = algo.strip().lower()
 
             if algo == 'bfs':
-                solution = bfs(self.board)
+                solution, elapsed, peak = run_with_stats(bfs, self.board)
 
             elif algo == 'dfs':
-                solution = dfs(self.board)
+                solution, elapsed, peak = run_with_stats(dfs, self.board)
             elif algo == 'astar':
-                solution = astar(self.board)
+                solution, elapsed, peak = run_with_stats(astar, self.board)
             elif algo in ('wastar', 'weighted', 'weighted_astar', 'weightedastar'):
                 weight = simpledialog.askfloat('Weighted A*', 'Weight:', initialvalue=1.5, minvalue=1.0)
                 if weight is None:
                     return
-                solution = weighted_astar(self.board, weight)
+                solution, elapsed, peak = run_with_stats(weighted_astar, self.board, weight)
             elif algo == 'iddfs':
 
                 max_depth = simpledialog.askinteger(
@@ -116,16 +117,24 @@ if TK_AVAILABLE:
                 if max_depth is None:
                     return
 
-                solution = iterative_deepening(self.board, max_depth)
+                solution, elapsed, peak = run_with_stats(iterative_deepening, self.board, max_depth)
 
             elif algo == 'ufc':
-                solution = ufc(self.board)
+                solution, elapsed, peak = run_with_stats(ufc, self.board)
             else:
                 messagebox.showerror('Solver', "Unknown solver: use 'bfs', 'dfs', 'iddfs', 'ufc', 'astar' or 'wastar'")
                 return
             if solution is None:
-                messagebox.showinfo('Solve', 'There is no solution')
+                try:
+                    messagebox.showinfo('Solve', f'There is no solution\nTime: {elapsed:.6f} s\nPeak memory: {peak/1024:.2f} KiB')
+                except Exception:
+                    print(f'Time: {elapsed:.6f} s | Peak Python memory: {peak/1024:.2f} KiB')
                 return
+
+            try:
+                messagebox.showinfo('Solve stats', f'Time: {elapsed:.6f} s\nPeak memory: {peak/1024:.2f} KiB')
+            except Exception:
+                print(f'Time: {elapsed:.6f} s | Peak Python memory: {peak/1024:.2f} KiB')
 
             apply_now = messagebox.askyesno(
                 'Apply solution',
@@ -157,8 +166,20 @@ if TK_AVAILABLE:
         except Exception as e:
             print('Unable to start GUI:', e)
             return
+
+        try:
+            root.protocol('WM_DELETE_WINDOW', root.destroy)
+        except Exception:
+            pass
+
         app = LightsOutGUI(root, start_board=start_board)
-        root.mainloop()
+        try:
+            root.mainloop()
+        finally:
+            try:
+                root.destroy()
+            except Exception:
+                pass
 
 else:
     def main(start_board: Board = None):
