@@ -32,8 +32,11 @@ def chase_lights_heuristic(board):
         for c in range(n):
             if sim[r][c] == 1:
                 forced += 1
+
                 for dr, dc in [(0, 0), (1, 0), (-1, 0), (0, 1), (0, -1)]:
                     nr, nc = r + 1 + dr, c + dc
+
+
                     if 0 <= nr < n and 0 <= nc < n:
                         sim[nr][nc] ^= 1
     # remaining lit cells in the last row need dedicated moves
@@ -42,41 +45,40 @@ def chase_lights_heuristic(board):
 
 
 def gf2_heuristic(board):
-    # GF(2) heuristic, Gaussian eleimination to findexact minimum number of moves required
-
-#we build the n²*n² toggle matrix A where column j encodes which cells button j flips, then solve A·x = b (mod 2) for the current board state b. 
- # the weight of the minimum-weight solution gives the exact cost.
+    # gf2 heuristic: gaussian elimination to estimate min moves when feasible
 
     n = board.board_size
     num_cells = n * n
 
-    # flatten board state into column vector
+    # flatten board state to vector and build toggle matrix
     b = [board.grid[r][c] for r in range(n) for c in range(n)]
-    # build the toggle matrix A
     A = [[0] * num_cells for _ in range(num_cells)]
     for r in range(n):
         for c in range(n):
+
             j = r * n + c
             for dr, dc in [(0, 0), (1, 0), (-1, 0), (0, 1), (0, -1)]:
                 nr, nc = r + dr, c + dc
+
                 if 0 <= nr < n and 0 <= nc < n:
                     A[nr * n + nc][j] = 1
 
-    #form [A | b] augmentend matrix for gaussian elimination
+    # form augmented matrix [A|b] and perform gaussian elim over gf(2)
     mat = [A[i][:] + [b[i]] for i in range(num_cells)]
     pivot_cols = []
     row_idx = 0
     for col in range(num_cells):
-        # find a pivot row at or below row_idx
         pivot = None
         for r in range(row_idx, num_cells):
             if mat[r][col] == 1:
                 pivot = r
                 break
         if pivot is None:
+
             continue
         mat[row_idx], mat[pivot] = mat[pivot], mat[row_idx]
         pivot_cols.append(col)
+
         for r in range(num_cells):
             if r != row_idx and mat[r][col] == 1:
                 mat[r] = [(mat[r][k] ^ mat[row_idx][k]) for k in range(num_cells + 1)]
@@ -87,33 +89,37 @@ def gf2_heuristic(board):
         if all(mat[r][c] == 0 for c in range(num_cells)) and mat[r][num_cells] == 1:
             return math.inf
 
-    # identify free variables (columns without a pivot)
     pivot_set = set(pivot_cols)
     free_vars = [c for c in range(num_cells) if c not in pivot_set]
     particular = [0] * num_cells
     for i, col in enumerate(pivot_cols):
         particular[col] = mat[i][num_cells]
 
-    # if too many free vars, fallback to cheap heuristic
+    #if too many free vars, fallback to cheap heuristic
     num_free = len(free_vars)
     if num_free > 20:
         return default_heuristic(board)
 
     min_weight = sum(particular)
     for mask in range(1, 1 << num_free):
-        # build the null-space vector for this combination of free vars
+
         null_vec = [0] * num_cells
         for bit, fv in enumerate(free_vars):
             if mask & (1 << bit):
                 null_vec[fv] = 1
-        # back-substitute null_vec into pivot rows to complete the vector
+
         candidate = particular[:]
+
         for i, col in enumerate(pivot_cols):
             val = mat[i][num_cells]
+
             for bit, fv in enumerate(free_vars):
                 val ^= mat[i][fv] * null_vec[fv]
+
             candidate[col] = val
+            
         for fv in free_vars:
+
             candidate[fv] = null_vec[fv]
         weight = sum(candidate)
         if weight < min_weight:
@@ -128,7 +134,9 @@ def isolated_lights_heuristic(board):
     count = 0
     for r in range(n):
         for c in range(n):
+
             if board.grid[r][c] == 1:
+
                 has_lit_neighbor = any(
                     board.grid[r + dr][c + dc] == 1
                     for dr, dc in [(1, 0), (-1, 0), (0, 1), (0, -1)]
@@ -154,6 +162,7 @@ def reconstruct_path(came_from, current):
         if prev is None or move is None:
             break
         path.append(move)
+
         current = prev
     path.reverse()
     return path
@@ -180,7 +189,7 @@ def astar(start_board, heuristic=None, weight=1.0, max_expansions=None):
     expansions = 0
     visited = set()
 
-    # map states to board objects so we can expand quickly
+    #map states to board objects so we can expand quickly
     state_to_board = {start_state: start_board}
 
     while open_heap:

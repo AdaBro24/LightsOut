@@ -1,16 +1,16 @@
+from collections import deque
 
+def bfs(start_board):
 
-def dfs(start_board):
-
-    stack = []
+    queue = deque()
     visited = set()
 
-    stack.append((start_board, []))
+    queue.append((start_board, []))
 
     visited.add(tuple(tuple(row) for row in start_board.grid)) # changing set into tuple, cause we cant store lists in set
 
-    while stack:
-        board, path = stack.pop()
+    while queue:
+        board, path = queue.popleft()
 
         if board.is_goal():
             return path
@@ -22,11 +22,6 @@ def dfs(start_board):
 
                 if state not in visited:
                     visited.add(state)
-                    stack.append((new_board, path + [(x,y)]))
+                    queue.append((new_board, path + [(x,y)]))
 
     return None
-
-
-
-
-

@@ -11,9 +11,9 @@ except Exception:
 import random
 
 from board import Board
-from bfs import bfs
-from dfs import dfs
-from astar import (
+from search_strategies.uninformed.bfs import bfs
+from search_strategies.uninformed.dfs import dfs
+from search_strategies.heuristic.astar import (
     astar,
     weighted_astar,
     default_heuristic,
@@ -22,11 +22,11 @@ from astar import (
     combined_heuristic,
     gf2_heuristic,
 )
-from greedy import greedy
-from iterative_deepening import iterative_deepening
-from ufc import ufc
-from perf import run_with_stats
-from io_utils import load_board_from_file, save_results_to_file, save_bulk_results
+from search_strategies.heuristic.greedy import greedy
+from search_strategies.uninformed.iterative_deepening import iterative_deepening
+from search_strategies.uninformed.ufc import ufc
+from utils.perf import run_with_stats
+from utils.io_utils import load_board_from_file, save_results_to_file, save_bulk_results
 
 
 if TK_AVAILABLE:
