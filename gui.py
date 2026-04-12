@@ -13,7 +13,16 @@ import random
 from board import Board
 from bfs import bfs
 from dfs import dfs
-from astar import astar, weighted_astar
+from astar import (
+    astar,
+    weighted_astar,
+    default_heuristic,
+    chase_lights_heuristic,
+    isolated_lights_heuristic,
+    combined_heuristic,
+    gf2_heuristic,
+)
+from greedy import greedy
 from iterative_deepening import iterative_deepening
 from ufc import ufc
 from perf import run_with_stats
@@ -209,7 +218,7 @@ if TK_AVAILABLE:
             try:
                 path = filedialog.askopenfilename(filetypes=[('Text files','*.txt'), ('All','*.*')])
             except Exception:
-                # fallback to simple input if filedialog not available
+                #input if filedialog not available
                 path = input('Path to puzzle file: ').strip()
 
             if not path:
@@ -256,6 +265,7 @@ if TK_AVAILABLE:
                     'dfs': dfs,
                     'astar': astar,
                     'weighted_astar_w1.5': (lambda b: weighted_astar(b, 1.5)),
+                    'greedy': greedy,
                     'iddfs_d10': (lambda b: iterative_deepening(b, 10)),
                     'ufc': ufc,
                 }
@@ -300,7 +310,7 @@ if TK_AVAILABLE:
             }
 
         def on_solve(self):
-            prompt = "Choose solver: 'bfs', 'dfs', 'iddfs' or 'ufc', 'astar', or 'wastar' (weighted A*)."
+            prompt = "Choose solver: 'bfs', 'dfs', 'iddfs' or 'ufc', 'greedy', 'astar', or 'wastar' (weighted A*)."
             algo = simpledialog.askstring('Solver', prompt, initialvalue='bfs')
 
             if not algo:
@@ -316,12 +326,46 @@ if TK_AVAILABLE:
             elif algo == 'dfs':
                 solution, elapsed, peak = run_with_stats(dfs, self.board)
             elif algo == 'astar':
-                solution, elapsed, peak = run_with_stats(astar, self.board)
+                # ask which heuristic to use for A*
+                heur = simpledialog.askstring('Heuristic', "Choose heuristic: 'default', 'chase', 'isolated', 'combined', 'gf2'", initialvalue='default')
+                heur_name = (heur or 'default').strip().lower()
+                heur_map = {
+                    'default': default_heuristic,
+                    'chase': chase_lights_heuristic,
+                    'isolated': isolated_lights_heuristic,
+                    'combined': combined_heuristic,
+                    'gf2': gf2_heuristic,
+                }
+                heuristic_fn = heur_map.get(heur_name, default_heuristic)
+                solution, elapsed, peak = run_with_stats(astar, self.board, heuristic_fn)
             elif algo in ('wastar', 'weighted', 'weighted_astar', 'weightedastar'):
                 weight = simpledialog.askfloat('Weighted A*', 'Weight:', initialvalue=1.5, minvalue=1.0)
                 if weight is None:
                     return
-                solution, elapsed, peak = run_with_stats(weighted_astar, self.board, weight)
+                # choose heuristic for weighted A*
+                heur = simpledialog.askstring('Heuristic', "Choose heuristic: 'default', 'chase', 'isolated', 'combined', 'gf2'", initialvalue='default')
+                heur_name = (heur or 'default').strip().lower()
+                heur_map = {
+                    'default': default_heuristic,
+                    'chase': chase_lights_heuristic,
+                    'isolated': isolated_lights_heuristic,
+                    'combined': combined_heuristic,
+                    'gf2': gf2_heuristic,
+                }
+                heuristic_fn = heur_map.get(heur_name, default_heuristic)
+                solution, elapsed, peak = run_with_stats(weighted_astar, self.board, weight, heuristic_fn)
+            elif algo == 'greedy':
+                heur = simpledialog.askstring('Heuristic', "Choose heuristic: 'default', 'chase', 'isolated', 'combined', 'gf2'", initialvalue='default')
+                heur_name = (heur or 'default').strip().lower()
+                heur_map = {
+                    'default': default_heuristic,
+                    'chase': chase_lights_heuristic,
+                    'isolated': isolated_lights_heuristic,
+                    'combined': combined_heuristic,
+                    'gf2': gf2_heuristic,
+                }
+                heuristic_fn = heur_map.get(heur_name, None)
+                solution, elapsed, peak = run_with_stats(greedy, self.board, None, heuristic_fn)
             elif algo == 'iddfs':
 
                 max_depth = simpledialog.askinteger(
@@ -374,16 +418,6 @@ if TK_AVAILABLE:
                 'final_board': final_board,
             }
 
-            # offer to save automatically
-            try:
-                if messagebox.askyesno('Save', 'Save results to file?'):
-                    path = filedialog.asksaveasfilename(defaultextension='.txt', filetypes=[('Text files','*.txt'), ('All','*.*')])
-                    if path:
-                        save_results_to_file(path, self.last_results)
-                        messagebox.showinfo('Saved', f'Results saved to {path}')
-            except Exception:
-                # ignore file dialog issues
-                pass
         def animate_solution(self, solution, delay=400):
             # animate applying each toggle in sequence using after
             if not solution:
@@ -395,7 +429,6 @@ if TK_AVAILABLE:
             self.board = self.board.toggle(move[0], move[1])
             self.refresh()
 
-            # schedule next
             self.master.after(delay, lambda: self.animate_solution(solution[1:], delay))
 
 
@@ -411,7 +444,7 @@ if TK_AVAILABLE:
 else:
     def main(start_board: Board = None):
         print('Tkinter is not available. Falling back to CLI for project_adam.')
-        # if tkinter is missing, run cli
+        #if tkinter missing, run cli
         try:
             import main as textual_main
             if hasattr(textual_main, 'main'):

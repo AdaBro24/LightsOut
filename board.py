@@ -1,7 +1,9 @@
 class Board:
+
     board_size = 4
 
     def __init__(self, grid):
+        #grid is a list of rows,each row is a list of 0/1
         self.grid = grid
 
     def toggle(self, x, y):
@@ -17,12 +19,14 @@ class Board:
         return Board(new_grid)
 
     def is_goal(self):
+        # goal when no cell is 1
         for row in self.grid:
             if 1 in row:
                 return False
         return True
 
     def display(self):
+        #for debugging
         for row in self.grid:
             print(" ".join(str(cell) for cell in row))
         print()

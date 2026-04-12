@@ -4,6 +4,8 @@ from typing import Any, Callable, Tuple
 
 
 def run_with_stats(func: Callable, *args, **kwargs) -> Tuple[Any, float, int]:
+    # lightweight helper to run a function and measure time + peak Python memory
+    #uses tracemalloc which measures Python allocated memory
 
     tracemalloc.start()
     try:
