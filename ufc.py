@@ -1,13 +1,14 @@
 from heapq import heappush, heappop
-
 def ufc(start_board):
-
+    # uniform-cost search (here all edges have cost 1 so it behaves like BFS but using a priority queue)
     pq = []
     visited = set()
     counter = 0
 
+    # push (cost, tie-breaker, board, path)
     heappush(pq, (0, counter, start_board, []))
 
+    # remember visited states to avoid revisiting
     visited.add(tuple(tuple(row) for row in start_board.grid))
 
     while pq:
@@ -16,6 +17,7 @@ def ufc(start_board):
         if board.is_goal():
             return path
 
+        # expand neighbors
         for x in range(board.board_size):
             for y in range(board.board_size):
 
@@ -23,6 +25,7 @@ def ufc(start_board):
                 state = tuple(tuple(row) for row in new_board.grid)
 
                 if state not in visited:
+                    # mark visited now to keep frontier small
                     visited.add(state)
 
                     counter += 1
