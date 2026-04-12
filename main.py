@@ -18,17 +18,10 @@ if __name__ == '__main__':
 
 
     if TK_AVAILABLE:
-        choice = input("Choose interface: \n[0] GUI \n[1] CLI \n(default gui): ").strip().lower()
-        if choice == '1':
-            run_textual(start_board)
-        else:
-            try:
-                gui_main(start_board)
-            except Exception as e:
-                print('Failed to launch GUI, falling back to CLI:', e)
-                run_textual(start_board)
+
+        gui_main(start_board)
     else:
-        run_textual(start_board)
+        print('To run the game you need to install tkinter')
 
 
 

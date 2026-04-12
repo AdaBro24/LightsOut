@@ -61,7 +61,7 @@ def save_results_to_file(path: str, results: Dict[str, Any]):
 
 def save_bulk_results(input_path: str, solvers: Dict[str, Callable], output_path: str = None) -> str:
     #load board from input_path, run solvers and write a combined results file.
-
+    # load input and run each solver, capturing elapsed and peak memory
     board = load_board_from_file(input_path)
     results: Dict[str, Dict[str, Any]] = {}
     for name, fn in solvers.items():
