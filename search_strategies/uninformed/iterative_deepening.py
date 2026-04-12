@@ -1,7 +1,7 @@
 from board import Board
 
 def depth_limited_search(board, limit, path, visited):
-    #depth limited recursive search
+    # depth limited recursive search
     # return a path when goal found else None
 
     if board.is_goal():
@@ -31,7 +31,7 @@ def depth_limited_search(board, limit, path, visited):
     return None
 
 def iterative_deepening(start_board, max_depth = 10):
-    #increase depth limits until solution or max_depth
+    # increase depth limits until solution or max_depth
     for depth in range(max_depth + 1):
 
         visited = set()
@@ -44,9 +44,3 @@ def iterative_deepening(start_board, max_depth = 10):
             return result
 
     return None
-
-
-
-
-
-

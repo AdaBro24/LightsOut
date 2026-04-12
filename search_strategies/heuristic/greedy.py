@@ -2,8 +2,8 @@ from typing import Optional, List, Tuple, Callable
 from board import Board
 
 
-#heuristic should accept a Board and return an int score (lower  better)
-def greedy(start_board, max_iters= None, heuristic= None) :
+# heuristic should accept a Board and return an int score (lower better)
+def greedy(start_board, max_iters=None, heuristic=None):
     # if no heuristic provided, use simple lit cell count
     def lit_count(b):
         return sum(cell for row in b.grid for cell in row)
@@ -25,7 +25,7 @@ def greedy(start_board, max_iters= None, heuristic= None) :
         if board.is_goal():
             return path
 
-        # evaluate all possible single toggles using score_fn
+        #evaluate all possible single toggles using score_fn
         candidates = []  # (score, state, move, board)
         for x in range(n):
             for y in range(n):

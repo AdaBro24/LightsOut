@@ -3,7 +3,7 @@ from datetime import datetime
 import os
 
 from board import Board
-from perf import run_with_stats
+from utils.perf import run_with_stats
 
 
 def load_board_from_file(path: str) -> Board:
@@ -18,6 +18,8 @@ def load_board_from_file(path: str) -> Board:
     for ln in lines:
         parts = ln.split()
         row = [int(p) for p in parts]
+
+        
         if any(v not in (0, 1) for v in row):
             raise ValueError('board values must be 0 or 1')
         rows.append(row)
@@ -35,9 +37,8 @@ def save_results_to_file(path: str, results: Dict[str, Any]):
     #write a compact results file
 
     lines: List[str] = []
-    lines.append(f'Report generated: {datetime.utcnow().isoformat()} UTC')
-    lines.append('')
     if results.get('input_file'):
+
         lines.append(f"Input file: {results['input_file']}")
     if results.get('solver'):
         lines.append(f"Solver: {results['solver']}")
@@ -50,6 +51,7 @@ def save_results_to_file(path: str, results: Dict[str, Any]):
     if results.get('elapsed') is not None:
         lines.append(f"Elapsed (s): {results['elapsed']:.6f}")
     if results.get('peak') is not None:
+
         peak = results['peak']
         lines.append(f"Peak (bytes): {peak} | {peak/1024:.2f} KiB")
 
@@ -69,6 +71,7 @@ def save_bulk_results(input_path: str, solvers: Dict[str, Callable], output_path
             sol, elapsed, peak = run_with_stats(fn, board)
             results[name] = {'solution': sol, 'elapsed': elapsed, 'peak': peak}
         except Exception as e:
+
             results[name] = {'solution': None, 'elapsed': None, 'peak': None, 'error': str(e)}
 
     out = output_path or (input_path + '_all_results.txt')
@@ -76,12 +79,15 @@ def save_bulk_results(input_path: str, solvers: Dict[str, Callable], output_path
 
     for name, info in results.items():
         lines.append(f'=== Solver: {name} ===')
+
         if 'error' in info:
             lines.append(f"Error: {info['error']}")
             lines.append('')
             continue
 
+
         sol = info.get('solution')
+
         lines.append(f'Solution found: {sol is not None}')
         if sol:
             lines.append(f'Solution moves: {sol}')

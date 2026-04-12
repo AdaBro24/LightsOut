@@ -1,4 +1,5 @@
 from heapq import heappush, heappop
+
 def ufc(start_board):
     # uniform-cost search (here all edges have cost 1 so it behaves like BFS but using a priority queue)
     pq = []
